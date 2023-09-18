@@ -1,0 +1,8 @@
+users/
+migration/
+.vscode/
+.idea/
+*.db
+*.csv
+*.zip
+
