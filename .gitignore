@@ -1,9 +1,10 @@
 users/
-migration/
+migrations/
 .vscode/
 .idea/
 __pycache__/
 *.db
 *.csv
 *.zip
-
+*.ini
+*.sqlite
