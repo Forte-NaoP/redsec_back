@@ -32,3 +32,22 @@ class ModelCreate(BaseModel):
 class ModelList(BaseModel):
     total: int = 0
     models: list[ModelPublic] = []
+
+
+class ModelHistory(BaseModel):
+    id: int
+    description: str
+    file_name: str
+    pending: bool
+
+    class Config:
+        from_attributes = True
+
+class ModelHistoryPublic(BaseModel):
+    description: str
+    file_name: str
+    pending: bool
+
+class ModelHistoryList(BaseModel):
+    total: int = 0
+    history: list[ModelHistoryPublic] = []
