@@ -173,9 +173,7 @@ def delete_model(model_uuid: str,
     user_folder = os.path.join(user_prefix, current_user.username)
     model_path = os.path.join(user_folder, model.ML_model_uuid)
 
+    ML_model_crud.delete_model(db=db, model=model)
     if os.path.isdir(model_path):
-        shutil.rmtree(model_path)
-        ML_model_crud.delete_model(db=db, model=model)
-        return {"result": "삭제되었습니다."}
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model file not found!")
+        shutil.rmtree(model_path)    
+    return {"result": "삭제되었습니다."}
