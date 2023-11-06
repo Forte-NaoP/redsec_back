@@ -31,10 +31,11 @@ model_files: dict = dict.fromkeys(model_keys)
 @router.get("/download")
 def download_client(db: Session = Depends(get_db),
                     current_user: User = Depends(get_current_user)):
-
-    redsec_client_path = Path('./client.zip')
-    if redsec_client_path.is_file():
-        return FileResponse(redsec_client_path, media_type="application/zip", filename=redsec_client_path.name)
+    
+    client_path = Path('./client/client.zip')
+    headers = {"Content-Disposition": f"attachment; filename={client_path.name}"}
+    if client_path.is_file():
+        return FileResponse(client_path, media_type="application/zip", headers=headers)
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found!")
 
