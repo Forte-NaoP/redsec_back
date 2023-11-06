@@ -1,16 +1,15 @@
 from pydantic import BaseModel, field_validator
 from fastapi import UploadFile, File
-from typing import List
+from typing import List, Optional
 
 
 def parse_file_upload(
-    model: UploadFile = File(...),
-    weight: UploadFile = File(...),
-    ckks_parms: UploadFile = File(...),
-    galois_key: UploadFile = File(...),
-    relin_key: UploadFile = File(...),
-    pub_key: UploadFile = File(...),
-    # 나머지 파일 ...
+    model: UploadFile = File(None),
+    weight: UploadFile = File(None),
+    ckks_parms: UploadFile = File(None),
+    galois_key: UploadFile = File(None),
+    relin_key: UploadFile = File(None),
+    pub_key: UploadFile = File(None),
 ):
     return FileUpload(
         model=model,
@@ -23,12 +22,15 @@ def parse_file_upload(
 
 
 class FileUpload(BaseModel):
-    model: UploadFile
-    weight: UploadFile
-    ckks_parms: UploadFile
-    galois_key: UploadFile
-    relin_key: UploadFile
-    pub_key: UploadFile
+    model: Optional[UploadFile] = None
+    weight: Optional[UploadFile] = None
+    ckks_parms: Optional[UploadFile] = None
+    galois_key: Optional[UploadFile] = None
+    relin_key: Optional[UploadFile] = None
+    pub_key: Optional[UploadFile] = None
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 class Model(BaseModel):

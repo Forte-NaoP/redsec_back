@@ -26,7 +26,6 @@ router = APIRouter(
 user_prefix = Path('./users')
 model_prefix = "../"
 model_keys = ["model", "weight", "ckks_parms", "galois_key", "relin_key", "pub_key"]
-model_files: dict = dict.fromkeys(model_keys)
 
 @router.get("/download")
 def download_client(db: Session = Depends(get_db),
@@ -55,8 +54,9 @@ async def upload_model(db: Session = Depends(get_db),
                        name: str = Form(...),
                        files: ML_model_schema.FileUpload = Depends(ML_model_schema.parse_file_upload)):
 
-    if model_files.keys() != files.model_dump().keys():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type!")
+    for key in model_keys:
+        if files[key] is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="모든 파일을 업로드 해주세요")
 
     username = current_user.username
     user_folder = os.path.join(user_prefix, username)
