@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-
+from typing import List
 
 class FileUpload(BaseModel):
     name: str
@@ -31,7 +31,7 @@ class ModelCreate(BaseModel):
 
 class ModelList(BaseModel):
     total: int = 0
-    models: list[ModelPublic] = []
+    models: List[ModelPublic] = []
 
 
 class ModelHistory(BaseModel):
@@ -43,11 +43,13 @@ class ModelHistory(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ModelHistoryPublic(BaseModel):
     description: str
     file_name: str
     pending: bool
 
+
 class ModelHistoryList(BaseModel):
     total: int = 0
-    history: list[ModelHistoryPublic] = []
+    history: List[ModelHistoryPublic] = []

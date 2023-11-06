@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator, EmailStr
-
+from typing import List
 from domain.ML_model.ML_model_schema import Model
 
 
@@ -32,7 +32,7 @@ class User(BaseModel):
     id: int
     username: str
     email: str
-    user_models: list[Model] = []
+    user_models: List[Model] = []
 
     class Config:
         from_attributes = True
