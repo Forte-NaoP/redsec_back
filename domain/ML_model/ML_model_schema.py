@@ -1,8 +1,34 @@
 from pydantic import BaseModel, field_validator
+from fastapi import UploadFile, File
 from typing import List
 
+
+def parse_file_upload(
+    model: UploadFile = File(...),
+    weight: UploadFile = File(...),
+    ckks_parms: UploadFile = File(...),
+    galois_key: UploadFile = File(...),
+    relin_key: UploadFile = File(...),
+    pub_key: UploadFile = File(...),
+    # 나머지 파일 ...
+):
+    return FileUpload(
+        model=model,
+        weight=weight,
+        ckks_parms=ckks_parms,
+        galois_key=galois_key,
+        relin_key=relin_key,
+        pub_key=pub_key,
+    )
+
+
 class FileUpload(BaseModel):
-    name: str
+    model: UploadFile
+    weight: UploadFile
+    ckks_parms: UploadFile
+    galois_key: UploadFile
+    relin_key: UploadFile
+    pub_key: UploadFile
 
 
 class Model(BaseModel):

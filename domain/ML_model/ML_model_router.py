@@ -8,7 +8,7 @@ from pathvalidate import sanitize_filename, sanitize_filepath
 
 import os
 import uuid
-from typing import List
+from typing import List, Dict
 from subprocess import Popen, PIPE
 import shutil
 
@@ -17,6 +17,7 @@ from domain.user.user_router import get_current_user
 from models import User
 from domain.ML_model import ML_model_schema, ML_model_crud
 
+
 router = APIRouter(
     prefix="/api/model",
 )
@@ -24,7 +25,8 @@ router = APIRouter(
 
 user_prefix = Path('./users')
 model_prefix = "../"
-
+model_keys = ["model", "weight", "ckks_parms", "galois_key", "relin_key", "pub_key"]
+model_files: dict = dict.fromkeys(model_keys)
 
 @router.get("/download")
 def download_client(db: Session = Depends(get_db),
@@ -50,21 +52,16 @@ def ml_model_list(db: Session = Depends(get_db),
 async def upload_model(db: Session = Depends(get_db),
                        current_user: User = Depends(get_current_user),
                        name: str = Form(...),
-                       files: List[UploadFile] = File(...)):
+                       files: ML_model_schema.FileUpload = Depends(ML_model_schema.parse_file_upload)):
+
+    if model_files.keys() != files.model_dump().keys():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type!")
 
     username = current_user.username
     user_folder = os.path.join(user_prefix, username)
     if not os.path.exists(user_folder):
         os.makedirs(user_folder)
 
-    exts = list(map(lambda file: os.path.splitext(file.filename)[1], files))
-    print(exts)
-
-    # if not ('.key' in exts):
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="public key not found!")
-    # if not ('.dat' in exts) or ('.pth' in exts):
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="model weight file not found!")
-    
     path_prefix = f"{uuid.uuid4()}"
     ML_model_crud.save_model(db=db, user=current_user, name=name, path=path_prefix)
 
@@ -72,13 +69,9 @@ async def upload_model(db: Session = Depends(get_db),
     if not os.path.exists(model_dir_path):
         os.makedirs(model_dir_path)
 
-    for file in files:
-        # file_extension = os.path.splitext(file.filename)[1]
-        # safe_filename = f"{path_prefix}{file_extension}"
-        safe_filename = sanitize_filename(file.filename)
-
-        with open(os.path.join(model_dir_path, safe_filename), "wb") as buffer:
-            contents = await file.read()
+    for file_type, file in files:
+        contents = await file.read()
+        with open(os.path.join(model_dir_path, f"{file_type}"), "wb") as buffer:
             buffer.write(contents)
 
     return
