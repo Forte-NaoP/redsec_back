@@ -29,12 +29,26 @@ def get_model_by_uuid(db: Session, uuid: str) -> Model:
     return db.query(Model).filter(Model.ML_model_uuid == uuid).first()
 
 
+def get_model_by_uuid_and_user(db: Session, uuid: str, user: User) -> Model:
+    return db.query(Model)\
+        .filter(Model.ML_model_uuid == uuid)\
+        .filter(Model.user_id == user.id)\
+        .first()
+
+
 def get_model_history(db: Session, model: Model):
     total = db.query(History).filter(History.model_id == model.id).count()
     histories = db.query(History)\
         .order_by(History.id.desc()).filter(History.model_id == model.id).all()
     
     return total, histories
+
+
+def get_model_history_by_filename(db: Session, model: Model, file_name: str):
+    return db.query(History)\
+        .filter(History.model_id == model.id)\
+        .filter(History.file_name == file_name)\
+        .first()
 
 
 def save_file(db: Session, model: Model, description: str, file_name: str):
@@ -47,3 +61,11 @@ def save_file(db: Session, model: Model, description: str, file_name: str):
     
     db.add(db_history)
     db.commit()
+
+
+def update_history_status(db: Session, file_name: str, status: bool):
+    db_history = db.query(History).filter(History.file_name == file_name).first()
+    db_history.pending = status
+    db.commit()
+
+
