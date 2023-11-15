@@ -1,21 +1,20 @@
 import torch.nn.modules.conv
 
 header = """
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
+
 from service import *
 from seal import *
 import torch
-import os
-import sys
 import re
 """
 
 main = r"""
 if __name__ == '__main__':
-    if os.environ.get('WORK_DIR') is None:
-        os.environ['WORK_DIR'] = '.'
-        cwd = '.'
-    else:
-        cwd = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../', os.environ['WORK_DIR'])
+
+    cwd = sys.path[0]
     sys.path.append(cwd)
 
     parms = EncryptionParameters(scheme_type.ckks)
@@ -146,9 +145,13 @@ relu = """
 
 import sys
 import re
+import os
 
 if __name__ == "__main__":
-    sys.path.append('.')
+
+    cwd = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../', os.environ['WORK_DIR'])
+    sys.path.append(cwd)
+
     import model
 
     model_cnn = model.CNN()
@@ -215,7 +218,7 @@ if __name__ == "__main__":
 
     code = header + HE_inference.format(body=body) + main
     print(conv_strides, conv_paddings, pool_strides, pool_paddings, fc_outputs)
-    with open('inference.py', 'w') as f:
+    with open(os.path.join(cwd, 'inference.py'), 'w') as f:
         f.write(code)
 
 
