@@ -27,7 +27,6 @@ if __name__ == "__main__":
     ckks_encoder = CKKSEncoder(context)
 
     scale = context.key_context_data().parms().coeff_modulus()[1].bit_count()
-    print('scale: ', scale)
 
     if mode == 0:
         public_key = PublicKey()
@@ -61,6 +60,6 @@ if __name__ == "__main__":
         ctxt.load(context, file_name)
         ptxt = ckks_encoder.decode(decryptor.decrypt(ctxt))[:10]
 
-        print(ptxt.index(max(ptxt)))
+        print(np.argmax(ptxt))
 
 
