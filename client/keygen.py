@@ -14,7 +14,9 @@ if __name__ == "__main__":
 
     max_bit_count = {16384: 438, 32768: 881}
     max_medium_scale = (max_bit_count[poly_modulus_degree] - 2 * bits_scale1) // bits_scale2
-    modulus_chain_length = min(max_medium_scale, 9999)
+    modulus_chain_length = 9999
+    while modulus_chain_length > max_medium_scale or modulus_chain_length < 3:
+        modulus_chain_length = int(input(f"Enter modulus_chain_length (3 ~ {max_medium_scale}): "))
 
     coeff_mod_bit_sizes = [bits_scale1] + [bits_scale2] * modulus_chain_length + [bits_scale1]
     parms.set_coeff_modulus(CoeffModulus.Create(poly_modulus_degree, coeff_mod_bit_sizes))
@@ -32,9 +34,9 @@ if __name__ == "__main__":
 
     if not os.path.isdir('key'):
         os.mkdir('key')
-    parms.save('key/parms')
-    public_key.save('key/public_key')
+    parms.save('key/ckks_parms')
+    public_key.save('key/pub_key')
     secret_key.save('key/secret_key')
     galois_key.save('key/galois_key')
-    relin_keys.save('key/relin_keys')
+    relin_keys.save('key/relin_key')
 
