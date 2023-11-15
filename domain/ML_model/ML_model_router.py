@@ -5,12 +5,12 @@ from starlette import status
 from pathlib import Path
 from pathvalidate import sanitize_filename, sanitize_filepath
 
-
 import os
 import uuid
 from typing import List, Dict
 from subprocess import Popen, PIPE
 import shutil
+
 
 import database
 from database import get_db
@@ -29,7 +29,7 @@ model_prefix = "../"
 model_keys = ["model", "weight", "ckks_parms", "galois_key", "relin_key", "pub_key"]
 PYTHON_HOME = "/home/bjh9750/anaconda3/envs/decathlon/bin/python3"
 RUNNER_HOME = "./runner/runner.py"
-
+COMPILER_HOME = "./runner/runner_make.py"
 
 @router.get("/download")
 def download_client(db: Session = Depends(get_db),
@@ -54,11 +54,27 @@ def ml_model_list(db: Session = Depends(get_db),
     }
 
 
+async def create_inference_code(files, model_dir_path):
+    for file_type, file in files:
+        contents = await file.read()
+
+        with open(os.path.join(model_dir_path, f"{file_type}{'.py' if file_type == 'model' else ''}"), "wb") as buffer:
+            buffer.write(contents)
+
+    env = os.environ.copy()
+    env["WORK_DIR"] = model_dir_path
+    process = Popen([PYTHON_HOME, COMPILER_HOME], stdout=PIPE, stderr=PIPE, env=env)
+    stdout, stderr = process.communicate()
+
+
 @router.post("/upload", status_code=status.HTTP_204_NO_CONTENT)
-async def upload_model(db: Session = Depends(get_db),
-                       current_user: User = Depends(get_current_user),
-                       name: str = Form(...),
-                       files: ML_model_schema.FileUpload = Depends(ML_model_schema.parse_file_upload)):
+async def upload_model(
+        background_tasks: BackgroundTasks,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+        name: str = Form(...),
+        files: ML_model_schema.FileUpload = Depends(ML_model_schema.parse_file_upload)
+):
 
     for key in model_keys:
         if files[key] is None:
@@ -76,11 +92,7 @@ async def upload_model(db: Session = Depends(get_db),
     if not os.path.exists(model_dir_path):
         os.makedirs(model_dir_path)
 
-    for file_type, file in files:
-        contents = await file.read()
-
-        with open(os.path.join(model_dir_path, f"{file_type}{'.py' if file_type == 'model' else ''}"), "wb") as buffer:
-            buffer.write(contents)
+    background_tasks.add_task(create_inference_code, files, model_dir_path)
 
     return
 
@@ -88,16 +100,17 @@ async def upload_model(db: Session = Depends(get_db),
 def run_inference_process(model_path: str, image_path: str):
 
     db = database.SessionLocal()
-
     env = os.environ.copy()
     env["WORK_DIR"] = model_path
     env["IMAGE_PATH"] = image_path
     try:
-        process = Popen([PYTHON_HOME, RUNNER_HOME], stdout=PIPE, stderr=PIPE, env=env)
+        process = Popen([PYTHON_HOME, os.path.join(model_path, 'inference.py')], stdout=PIPE, stderr=PIPE, env=env)
         stdout, stderr = process.communicate()
         ML_model_crud.update_history_status(db, image_path, False)
         print(stdout.decode())
         print(stderr.decode())
+    except Exception as e:
+        print(e)
     finally:
         db.close()
 
@@ -134,7 +147,6 @@ async def inference_model(model_uuid: str,
     ML_model_crud.save_file(db=db, model=model, description=name, file_name=safe_filename)
 
     background_tasks.add_task(run_inference_process, model_path, safe_filename)
-
     return {"result": "Pending..."}
 
 
