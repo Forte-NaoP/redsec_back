@@ -185,7 +185,7 @@ def download_inference_data(model_uuid: str, file_name: str,
     if history is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History not found!")
 
-    return FileResponse(file_path, media_type="image/png", filename=f"{history.description}_{_type}")
+    return FileResponse(file_path, media_type="application/octet-stream", filename=f"{history.description}_{_type}")
 
 
 @router.delete("/{model_uuid}/delete")
